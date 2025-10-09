@@ -14,5 +14,4 @@ Yapılacaklar
 -Port tarama
 
 
-
 Eğitim amaçlıdır.
