@@ -3,25 +3,25 @@ from colorama import init, Fore, Style, Back
 from queue import Queue, Empty
 from threading import Thread, Lock
 import time
-
+import argparse
 init()
 
 q = Queue()
 
-target_domain = "github.com"
+
 
 scanned_count = 0
 total_count = 0
 count_lock = Lock()
 
-def scan_subdomain(subdomain):
+def scan_subdomain(subdomain, domain):
     global scanned_count
     with count_lock:
          scanned_count +=1
          current = scanned_count
 
     clear_string = subdomain.strip()
-    url = f"https://{clear_string}.{target_domain}"
+    url = f"https://{clear_string}.{domain}"
     try:
         requests.get(url,timeout=3)
     except requests.exceptions.RequestException:
@@ -30,25 +30,33 @@ def scan_subdomain(subdomain):
     else:
         print(Back.BLACK, Fore.GREEN + f"[{current}/{total_count}] [+] {url} bulundu" + Style.RESET_ALL)
 
-def worker():
+def worker(domain):
     while True:
         try:
             subdomain = q.get(timeout=0.5)
             if subdomain is None:
                 break
-            scan_subdomain(subdomain)
+            scan_subdomain(subdomain,domain)
             q.task_done()
         except Empty:
             continue
 
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="basit subdomain tarayıcı")
+    parser.add_argument('-d','--domain', required=True,help="Taranacak hedef alan adı (örn: google.com)")
+    parser.add_argument('-w','--wordlist',required=True,help="kelime listesi dosyası")
+    parser.add_argument('-t','--threads',default=50,type=int)
+    args = parser.parse_args()
+
     try:
-        for _ in range(50):
-            t = Thread(target=worker)
+        for _ in range(args.threads):
+            t = Thread(target=worker,args=(args.domain,))
             t.daemon = True
             t.start()
 
-        with open('wordlist.txt','r') as file:
+        with open(args.wordlist,"r") as file:
             wordlist = file.readlines()
             total_count = len(wordlist)
         print(Back.BLACK, Fore.CYAN + f"[*]{len(wordlist)} subdomain taranacak" + Style.RESET_ALL)
@@ -56,7 +64,7 @@ if __name__ == "__main__":
             clear_string = subdomain.strip()
             q.put(clear_string)        
         
-        for _ in range(50):
+        for _ in range(args.threads):
             q.put(None)
         
         while not q.empty():
