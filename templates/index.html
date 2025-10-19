@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submariner</title>
+</head>
+<body>
+    <h1>Submariner 🌊</h1>
+    <form id="scan-form">
+        <input type="text" name="domain" placeholder="örn: google.com" required>
+        <button type="submit">Tara</button>
+    </form>
+    <hr>
+    <h2>Durum:</h2>
+    <div id="results"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
